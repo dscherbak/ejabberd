@@ -279,7 +279,7 @@ init([Host, StartInterval]) ->
 
 connecting(connect, #state{host = Host} = State) ->
     ConnectRes = case db_opts(Host) of
-		   [mysql | Args] -> apply(fun mysql_connect/5, Args);
+		   [mysql | Args] -> apply(fun mysql_connect/6, Args);
            [pgsql | Args] -> apply(fun pgsql_connect/5, Args);
            [sqlite | Args] -> apply(fun sqlite_connect/1, Args);
 		   [mssql | Args] -> apply(fun odbc_connect/1, Args);
@@ -837,11 +837,13 @@ pgsql_execute_to_odbc(_) -> {updated, undefined}.
 
 %% part of init/1
 %% Open a database connection to MySQL
-mysql_connect(Server, Port, DB, Username, Password) ->
+mysql_connect(Server, Port, DB, Username, Password, MaxPacketSize) ->
     case p1_mysql_conn:start(binary_to_list(Server), Port,
 			     binary_to_list(Username),
 			     binary_to_list(Password),
-			     binary_to_list(DB), fun log/3)
+			     binary_to_list(DB),
+           binary_to_integer(MaxPacketSize),
+           fun log/3)
 	of
 	{ok, Ref} ->
 	    p1_mysql_conn:fetch(
@@ -915,7 +917,7 @@ db_opts(Host) ->
                                       fun(mysql) -> mysql;
                                          (pgsql) -> pgsql;
                                          (sqlite) -> sqlite;
-					 (mssql) -> mssql;
+                                         (mssql) -> mssql;
                                          (odbc) -> odbc
                                       end, odbc),
     Server = ejabberd_config:get_option({sql_server, Host},
@@ -931,7 +933,7 @@ db_opts(Host) ->
                      {sql_port, Host},
                      fun(P) when is_integer(P), P > 0, P < 65536 -> P end,
                      case Type of
-			 mssql -> ?MSSQL_PORT;
+                         mssql -> ?MSSQL_PORT;
                          mysql -> ?MYSQL_PORT;
                          pgsql -> ?PGSQL_PORT
                      end),
@@ -944,12 +946,10 @@ db_opts(Host) ->
             Pass = ejabberd_config:get_option({sql_password, Host},
                                               fun iolist_to_binary/1,
                                               <<"">>),
-	    case Type of
-		mssql ->
-		    [mssql, <<"DSN=", Host/binary, ";UID=", User/binary,
-			      ";PWD=", Pass/binary>>];
-		_ ->
-		    [Type, Server, Port, DB, User, Pass]
+    case Type of
+		    mssql -> [mssql, <<"DSN=", Host/binary, ";UID=", User/binary, ";PWD=", Pass/binary>>];
+        mysql -> [Type, Server, Port, DB, User, Pass, ejabberd_config:get_option({mysql_packetsize, Host}, fun iolist_to_binary/1, undefined)];
+		    _ -> [Type, Server, Port, DB, User, Pass]
 	    end
     end.
 
