@@ -952,7 +952,7 @@ db_opts(Host) ->
                                               <<"">>),
     case Type of
 		    mssql -> [mssql, <<"DSN=", Host/binary, ";UID=", User/binary, ";PWD=", Pass/binary>>];
-        mysql -> [Type, Server, Port, DB, User, Pass, ejabberd_config:get_option({sql_packetsize, Host}, fun iolist_to_binary/1, undefined)];
+        mysql -> [Type, Server, Port, DB, User, Pass, ejabberd_config:get_option({sql_packetsize, Host}, fun(P) when is_integer(P), P > 0 -> P end, undefined)];
 		    _ -> [Type, Server, Port, DB, User, Pass]
 	    end
     end.
