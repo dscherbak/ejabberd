@@ -842,7 +842,11 @@ mysql_connect(Server, Port, DB, Username, Password, MaxPacketSize) ->
 			     binary_to_list(Username),
 			     binary_to_list(Password),
 			     binary_to_list(DB),
-           binary_to_integer(MaxPacketSize),
+           case MaxPacketSize /= undefined of
+                 true -> binary_to_integer(MaxPacketSize);
+                 false -> undefined;
+                 _ -> undefined
+           end,
            fun log/3)
 	of
 	{ok, Ref} ->
@@ -948,7 +952,7 @@ db_opts(Host) ->
                                               <<"">>),
     case Type of
 		    mssql -> [mssql, <<"DSN=", Host/binary, ";UID=", User/binary, ";PWD=", Pass/binary>>];
-        mysql -> [Type, Server, Port, DB, User, Pass, ejabberd_config:get_option({mysql_packetsize, Host}, fun iolist_to_binary/1, undefined)];
+        mysql -> [Type, Server, Port, DB, User, Pass, ejabberd_config:get_option({sql_packetsize, Host}, fun iolist_to_binary/1, undefined)];
 		    _ -> [Type, Server, Port, DB, User, Pass]
 	    end
     end.
