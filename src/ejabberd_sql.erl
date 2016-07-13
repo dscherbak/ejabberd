@@ -1065,7 +1065,9 @@ opt_type(sql_type) ->
 	(odbc) -> odbc
     end;
 opt_type(sql_username) -> fun iolist_to_binary/1;
+opt_type(sql_packetsize) ->
+    fun(P) when is_integer(P), P > 0 -> P end;
 opt_type(_) ->
     [max_fsm_queue, sql_database, sql_keepalive_interval,
      sql_password, sql_port, sql_server, sql_type,
-     sql_username].
+     sql_username, sql_packetsize].
