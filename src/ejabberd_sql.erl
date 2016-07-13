@@ -843,7 +843,7 @@ mysql_connect(Server, Port, DB, Username, Password, MaxPacketSize) ->
 			     binary_to_list(Password),
 			     binary_to_list(DB),
            case MaxPacketSize /= undefined of
-                 true -> binary_to_integer(MaxPacketSize);
+                 true -> MaxPacketSize;
                  false -> undefined;
                  _ -> undefined
            end,
