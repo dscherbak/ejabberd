@@ -276,6 +276,9 @@ process_header(State, Data) ->
 	  ?WARNING_MSG("An HTTP request without 'Host' HTTP "
 		       "header was received.",
 		       []),
+	  ?DEBUG("(~w) http query: ~w ~p~n",
+		 [State#state.socket, State#state.request_method,
+		  element(2, State#state.request_path)]),
 	  throw(http_request_no_host_header);
       {ok, http_eoh} ->
 	  ?DEBUG("(~w) http query: ~w ~p~n",
